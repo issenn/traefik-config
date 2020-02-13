@@ -1,0 +1,88 @@
+
+## dynamic configuration
+
+# http routing section
+
+# http://localhost:8080/
+# http://localhost:8080/api/rawdata
+# http://localhost:8080/debug/vars
+# http://traefik.issenn.lan/
+# http://traefik.issenn.lan/api/rawdata
+# http://traefik.issenn.lan/debug/vars
+# curl -s 127.0.0.1:8080/api/rawdata
+[http]
+  [http.routers]
+    # Define a connection between requests and services
+    # [http.routers.traefik-redirect-https]
+    #   entryPoints = ["web"]
+    #   priority = 100
+    #   # rule = "Host(`traefik.issenn.lan`, `traefik.issenn.local`) && (Path(`/`) || PathPrefix(`/api`) || PathPrefix(`/dashboard`) || PathPrefix(`/ping`) || PathPrefix(`/debug`))"
+    #   rule = "Host(`traefik.issenn.lan`, `traefik.issenn.local`)"
+    #   # If the rule matches, applies the middleware
+    #   middlewares = ["https-redirect"]
+    #   # If the rule matches, forward to the whoami service (declared below)
+    #   service = "https-redirect"
+
+    [http.routers.traefik-dashboard]
+      entryPoints = ["web"]
+      # priority = 100
+      rule = "Host(`traefik.issenn.lan`, `traefik.issenn.local`)"
+      # middlewares = ["traefik-auth", "traefik-compress"]
+      middlewares = ["dashboard_redirect@internal", "dashboard_stripprefix@internal", "traefik-auth", "traefik-compress"]
+      service = "dashboard@internal"
+
+    [http.routers.traefik-dashboard-tls]
+      entryPoints = ["websecure"]
+      # priority = 100
+      rule = "Host(`traefik.issenn.lan`, `traefik.issenn.local`)"
+      middlewares = ["dashboard_redirect-tls", "dashboard_stripprefix@internal", "traefik-auth", "traefik-compress"]
+      service = "dashboard@internal"
+
+      [http.routers.traefik-dashboard-tls.tls]
+
+    [http.routers.traefik-api]
+      entryPoints = ["web"]
+      rule = "Host(`traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/api`)"
+      middlewares = ["traefik-auth", "traefik-compress"]
+      service = "api@internal"
+
+    [http.routers.traefik-api-tls]
+      entryPoints = ["websecure"]
+      rule = "Host(`traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/api`)"
+      middlewares = ["traefik-auth", "traefik-compress"]
+      service = "api@internal"
+
+      [http.routers.traefik-api-tls.tls]
+
+    # [http.routers.traefik-debug-tls]
+    #   entryPoints = ["websecure"]
+    #   rule = "Host(`traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/debug`)"
+    #   # middlewares = ["traefik-auth", "traefik-compress"]
+    #   service = "api@internal"
+
+    #   [http.routers.traefik-debug-tls.tls]
+
+    # [http.routers.traefik-ping-tls]
+    #   entryPoints = ["websecure"]
+    #   rule = "Host(`traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/ping`)"
+    #   # middlewares = ["traefik-auth", "traefik-compress"]
+    #   service = "ping@internal"
+
+    #   [http.routers.traefik-ping-tls.tls]
+
+  [http.middlewares]
+
+    [http.middlewares.traefik-compress.compress]
+
+    # Define an authentication mechanism
+    [http.middlewares.traefik-auth.basicAuth]
+      users = [
+        "user:$apr1$Tg6ykNnt$oV4h.ST7wVNiqL6MgOiIw.",
+        "test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/",
+        "test2:$apr1$d9hr9HBB$4HxwgUir3HP4EsggP/QNo0",
+      ]
+
+    [http.middlewares.dashboard_redirect-tls.redirectRegex]
+      # permanent = true
+      regex = "^(https:\\/\\/[^:\\/]+(:\\d+)?)\\/$"
+      replacement = "${1}/dashboard/"

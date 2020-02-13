@@ -1,0 +1,253 @@
+
+## dynamic configuration
+
+[tls.stores]
+  [tls.stores.default]
+    # [tls.stores.default.defaultCertificate]
+    #   certFile = "path/to/cert.crt"
+    #   keyFile  = "path/to/cert.key"
+
+[tls.options]
+  [tls.options.default]
+    # sniStrict = true
+    minVersion = "VersionTLS12"
+    cipherSuites = [
+      "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+      "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305",
+      "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305",
+      "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+      "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+    ]
+
+    # [tls.options.default.clientAuth]
+    #   # in PEM format. each file can contain multiple CAs.
+    #   caFiles = ["path/to/clientca1.crt", "path/to/clientca2.crt"]
+    #   # clientAuthType = "RequireAndVerifyClientCert"
+    #   clientAuthType = "NoClientCert"
+
+  [tls.options.other]
+    # Cipher suites defined for TLS 1.2 and below cannot be used in TLS 1.3, and vice versa.
+    # (https://tools.ietf.org/html/rfc8446)
+    # With TLS 1.3, the cipher suites are not configurable (all supported cipher suites are safe in this case).
+    # https://golang.org/doc/go1.12#tls_1_3
+    minVersion = "VersionTLS13"
+
+# [[tls.certificates]]
+#   # Note that since no store is defined,
+#   # the certificate below will be stored in the `default` store.
+#   certFile = "/path/to/domain.cert"
+#   keyFile = "/path/to/domain.key"
+#   stores = ["default"]
+
+# [[tls.certificates]]
+#   certFile = "/path/to/other-domain.cert"
+#   keyFile = "/path/to/other-domain.key"
+#   stores = ["default"]
+
+# [[tls.certificates]]
+#   certFile = "/Users/issenn/Downloads/archive/cert.pem"
+#   keyFile = "/Users/issenn/Downloads/archive/privkey.pem"
+#   stores = ["default"]
+
+# http routing section
+
+[http]
+  [http.routers]
+    # Define a connection between requests and services
+    [http.routers.traefik-api]
+      entryPoints = ["web"]
+      priority = 80
+      # rule = "Host(`traefik.io`) || (Host(`containo.us`) && Path(`/traefik`))"
+      rule = "Host(`traefik.issenn.lan`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`) || PathPrefix(`/debug`))"
+      # If the rule matches, applies the middleware
+      middlewares = ["auth"]
+      # If the rule matches, forward to the whoami service (declared below)
+      service = "api@internal"
+
+    [http.routers.traefik-api-tls]
+      entryPoints = ["websecure"]
+      priority = 80
+      rule = "Host(`traefik.issenn.lan`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`) || PathPrefix(`/debug`))"
+      middlewares = ["auth"]
+      service = "api@internal"
+      # will terminate the TLS request
+      [http.routers.traefik-api-tls.tls]
+        options = "default"
+        # certResolver = "default"
+        [[http.routers.traefik-api-tls.tls.domains]]
+          main = "issenn.lan"
+          sans = ["traefik.issenn.lan", "*.traefik.issenn.lan"]
+
+    # [http.routers.https-redirect]
+    #   priority = 80
+    #   # rule = "HostRegexp(`{any:.+}`)"
+    #   rule = "HostRegexp(`{any:.*}`)"
+    #   middlewares = ["https-redirect"]
+    #   service = "https-redirect"
+
+    [http.routers.synology]
+      entryPoints = ["web"]
+      # priority = 1
+      rule = "Host(`synology.traefik.issenn.lan`)"
+      middlewares = ["auth-synology"]
+      service = "synology"
+
+    [http.routers.synology-tls]
+      entryPoints = ["websecure"]
+      # priority = 1
+      rule = "Host(`synology.traefik.issenn.lan`)"
+      middlewares = ["auth-synology"]
+      service = "synology"
+      [http.routers.synology-tls.tls]
+        options = "default"
+        # certResolver = "default"
+        [[http.routers.synology-tls.tls.domains]]
+          main = "issenn.lan"
+          sans = ["synology.traefik.issenn.lan", "*.synology.traefik.issenn.lan"]
+
+  [http.middlewares]
+    # Define an authentication mechanism
+    [http.middlewares.authentication.basicAuth]
+      # Declaring the user list
+      #
+      # Note: all dollar signs in the hash need to be doubled for escaping.
+      # To create user:password pair, it's possible to use this command:
+      # echo $(htpasswd -nb user password) | sed -e s/\\$/\\$\\$/g
+      # echo $(htpasswd -nb user password)
+      users = [
+        "user:$apr1$Tg6ykNnt$oV4h.ST7wVNiqL6MgOiIw.",
+        "test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/",
+        "test2:$apr1$d9hr9HBB$4HxwgUir3HP4EsggP/QNo0",
+      ]
+      # usersFile = "/path/to/my/usersfile"
+      # realm = "MyRealm"
+      # headerField = "X-WebAuth-User"
+      # removeHeader = true
+
+    [http.middlewares.auth.basicAuth]
+      users = [
+        "user:$apr1$Tg6ykNnt$oV4h.ST7wVNiqL6MgOiIw.",
+        "test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/",
+        "test2:$apr1$d9hr9HBB$4HxwgUir3HP4EsggP/QNo0",
+      ]
+
+    [http.middlewares.auth-synology]
+      [http.middlewares.auth-synology.basicAuth]
+        users = ["test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/"]
+        # removeHeader = true
+
+    [http.middlewares.https-redirect.redirectscheme]
+      # permanent = true
+      scheme = "https"
+      # port = "443"
+
+  [http.services]
+    # Define how to reach an existing service on our infrastructure
+    [http.services.https-redirect.LoadBalancer]
+      [[http.services.https-redirect.LoadBalancer.servers]]
+        url = ""
+        # url = "localhost"
+
+    [http.services.mirrored-synology]
+      [http.services.mirrored-synology.mirroring]
+        service = "synology-non-tls"
+        [[http.services.mirrored-synology.mirroring.mirrors]]
+          name = "synology-tls"
+          percent = 100
+
+      [http.services.synology]
+        # [http.services.synology.weighted.sticky.cookie]
+        #   # name = "synology_sticky_cookie_name"
+        #   secure = true
+        #   httpOnly = true
+        [[http.services.synology.weighted.services]]
+          name = "synology-non-tls"
+          weight = 4
+        [[http.services.synology.weighted.services]]
+          name = "synology-tls"
+          weight = 1
+
+    [http.services.synology-non-tls]
+      [http.services.synology-non-tls.loadBalancer]
+        passHostHeader = true
+        # [http.services.synology-non-tls.loadBalancer.sticky.cookie]
+        #   # name = "synology_sticky_cookie_name"
+        #   secure = true
+        #   httpOnly = true
+        
+        # [http.services.synology-non-tls.loadBalancer.healthCheck]
+        #   # scheme = "http"
+        #   path = "/health"
+        #   # port = 80
+        #   interval = "10s"
+        #   timeout = "3s"
+        #   # hostname = "hostname"
+        #   # [http.services.synology-non-tls.loadBalancer.healthCheck.headers]
+        #   #   My-Custom-Header = "foo"
+        #   #   My-Header = "bar"
+
+        [http.services.synology-non-tls.loadBalancer.responseForwarding]
+          # It is a duration in milliseconds, defaulting to 100.
+          flushInterval = "1s"
+
+        # [[http.services.synology-non-tls.loadBalancer.servers]]
+        #   url = "http://192.168.1.126:5000/"
+        [[http.services.synology-non-tls.loadBalancer.servers]]
+          url = "http://synology.issenn.lan:5000/"
+
+    [http.services.synology-tls]
+      [http.services.synology-tls.loadBalancer]
+        # [[http.services.synology-tls.loadBalancer.servers]]
+        #   url = "https://192.168.1.126:5001/"
+        [[http.services.synology-tls.loadBalancer.servers]]
+          url = "https://synology.issenn.lan:5001/"
+
+# [tcp]
+#   [tcp.routers]
+#     [tcp.routers.app]
+#       # By default, routers listen to every entrypoints
+#       entryPoints = ["web", "other"]
+#       # Catch every request (only available rule for non-tls routers. See below.)
+#       # rule = "HostSNI(`*`)"
+#       rule = "HostSNI(`tcp.traefik.issenn.lan`)"
+#       service = "appv1"
+
+#     [tcp.routers.app-tls]
+#       # won't listen to entry point web
+#       entryPoints = ["websecure"]
+#       priority = 1
+#       rule = "HostSNI(`tcp.traefik.issenn.lan`)"
+#       service = "appv2"
+#       # will route TLS requests (and ignore non tls requests)
+#       [tcp.routers.app-tls.tls]
+#         # By default, Traefik will terminate the SSL connections 
+#         # (meaning that it will send decrypted data to the services), 
+#         # but Traefik can be configured in order to let the requests pass through 
+#         # (keeping the data encrypted), and be forwarded to the service "as is".
+#         passthrough = true
+#         options = "default"
+#         # certResolver = "default"
+#         # [[http.routers.tcp-tls.tls.domains]]
+#           # main = "issenn.lan"
+#           # sans = ["tcp.traefik.issenn.lan", "*.tcp.traefik.issenn.lan"]
+
+#   [tcp.services]
+#     [tcp.services.app]
+#       [[tcp.services.app.weighted.services]]
+#         name = "appv1"
+#         weight = 3
+#       [[tcp.services.app.weighted.services]]
+#         name = "appv2"
+#         weight = 1
+
+#     [tcp.services.appv1]
+#       [tcp.services.appv1.loadBalancer]
+#         # It is a duration in milliseconds, defaulting to 100.
+#         terminationDelay = 200
+#         [[tcp.services.appv1.loadBalancer.servers]]
+#           address = "192.168.1.126:5001"
+
+#     [tcp.services.appv2]
+#       [tcp.services.appv2.loadBalancer]
+#         [[tcp.services.appv2.loadBalancer.servers]]
+#           address = "192.168.1.126:5001"

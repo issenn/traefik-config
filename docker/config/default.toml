@@ -1,0 +1,31 @@
+
+## dynamic configuration
+
+# tricks
+# https://github.com/containous/traefik/issues/4863#issuecomment-491093096
+
+# http routing section
+
+[http]
+  # [http.routers]
+    # [http.routers.http-catchall]
+    #   entryPoints = ["web"]
+    #   priority = 80
+    #   # rule = "HostRegexp(`{any:.+}`)"
+    #   rule = "HostRegexp(`{any:.*}`)"
+    #   middlewares = ["https-redirect"]
+    #   service = "https-redirect"
+
+  [http.middlewares]
+    [http.middlewares.https-redirect.redirectscheme]
+      scheme = "https"
+
+    [http.middlewares.content-compress.compress]
+      # excludedContentTypes = ["text/event-stream"]
+
+  [http.services]
+    # Define how to reach an existing service on our infrastructure
+    [http.services.https-redirect.LoadBalancer]
+      [[http.services.https-redirect.LoadBalancer.servers]]
+        url = ""
+        # url = "localhost"
