@@ -8,16 +8,17 @@
 
 [http]
   # [http.routers]
-    # [http.routers.http-catchall]
-    #   entryPoints = ["web"]
-    #   priority = 80
-    #   # rule = "HostRegexp(`{any:.+}`)"
-    #   rule = "HostRegexp(`{any:.*}`)"
-    #   middlewares = ["https-redirect"]
-    #   service = "https-redirect"
+  #   [http.routers.http-catchall]
+  #     entryPoints = ["web"]
+  #     priority = 2147483646
+  #     # rule = "HostRegexp(`{any:.+}`)"
+  #     rule = "HostRegexp(`{any:.*}`)"
+  #     middlewares = ["https-redirect"]
+  #     service = "https-redirect"
 
   [http.middlewares]
     [http.middlewares.https-redirect.redirectscheme]
+      permanent = true
       scheme = "https"
 
     [http.middlewares.content-compress.compress]

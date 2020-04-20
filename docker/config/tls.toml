@@ -26,7 +26,10 @@
       #   # clientAuthType = "RequireAndVerifyClientCert"
       #   clientAuthType = "NoClientCert"
 
-    [tls.options.other]
+    [tls.options.maxtls12]
+      maxVersion = "VersionTLS12"
+
+    [tls.options.mintls13]
       # Cipher suites defined for TLS 1.2 and below cannot be used in TLS 1.3, and vice versa.
       # (https://tools.ietf.org/html/rfc8446)
       # With TLS 1.3, the cipher suites are not configurable (all supported cipher suites are safe in this case).
@@ -34,16 +37,15 @@
       minVersion = "VersionTLS13"
 
   # [[tls.certificates]]
+  #   certFile = "/path/to/other-domain.cert"
+  #   keyFile = "/path/to/other-domain.key"
+  #   stores = ["default"]
+
+  # [[tls.certificates]]
   #   # Note that since no store is defined,
   #   # the certificate below will be stored in the `default` store.
   #   certFile = "/path/to/domain.cert"
   #   keyFile = "/path/to/domain.key"
-  #   stores = ["default"]
-
-  # [[tls.certificates]]
-  #   certFile = "/path/to/other-domain.cert"
-  #   keyFile = "/path/to/other-domain.key"
-  #   stores = ["default"]
 
   # [[tls.certificates]]
   #   certFile = "/Users/issenn/Downloads/archive/cert.pem"

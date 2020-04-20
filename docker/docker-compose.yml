@@ -1,12 +1,13 @@
-version: '3.7'
+version: "3.7"
 
 services:
   traefik:
-    # The official v2.0 Traefik docker image
-    image: traefik:v2.1.4
+    image: traefik:v2.2.0
     container_name: "traefik"
     hostname: "traefik"
-    # restart: always
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     # Enables the web UI and tells Traefik to listen to docker
     # command:
     #   # - "--log.level=DEBUG"
@@ -26,7 +27,7 @@ services:
       - "80:80"
       - "443:443"
       # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
+      # - "8080:8080"
       - "8082:8082"
     networks:
       - "traefik"
@@ -39,6 +40,12 @@ services:
         read_only: true
         volume:
           nocopy: true
+      # - type: bind
+      #   source: "/private/var/db/timezone/tz/2019c.1.0/zoneinfo"
+      #   target: "/usr/share/zoneinfo"
+      #   read_only: true
+      #   volume:
+      #     nocopy: true
       - type: bind
         source: "./traefik.toml"
         target: "/etc/traefik/traefik.toml"
@@ -52,39 +59,73 @@ services:
         volume:
           nocopy: true
       - type: bind
-        source: "./ssl"
-        target: "/etc/traefik/ssl"
+        source: "./acme"
+        target: "/etc/traefik/acme"
+      - type: bind
+        source: "./tls"
+        target: "/etc/traefik/tls"
         read_only: true
         volume:
           nocopy: true
-    # healthcheck:
-    #   test: ["CMD-SHELL", "wget -q --spider --proxy off localhost:8080/ping || exit 1"]
-    #   interval: 3s
-    #   timeout: 5s
+      - type: bind
+        source: "./logs"
+        target: "/var/log/traefik"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider --proxy off localhost:8080/ping || exit 1"]
+      interval: 3s
+      timeout: 5s
+    secrets:
+      - CF_API_EMAIL
+      - CF_DNS_API_TOKEN
+      - CF_ZONE_API_TOKEN
+    # env_file:
+    #   - .env
     environment:
       TZ: "Asia/Shanghai"
-
-  whoami:
-    # A container that exposes an API to show its IP address
-    image: "containous/whoami"
-    # container_name: "simple-service"
-    hostname: whoami
-    # ports:
-    #   - "80:80"
-    networks:
-      - "traefik"
+      CF_API_EMAIL_FILE: "/run/secrets/CF_API_EMAIL"
+      CF_DNS_API_TOKEN_FILE: "/run/secrets/CF_DNS_API_TOKEN"
+      CF_ZONE_API_TOKEN_FILE: "/run/secrets/CF_ZONE_API_TOKEN"
     labels:
-      # Explicitly tell Traefik to expose this container
       - "traefik.enable=true"
-      # The domain the service will respond to
-      - "traefik.http.routers.whoami.rule=Host(`whoami.issenn.lan`)"
-      # Allow request only from the predefined entry point named "web"
-      - "traefik.http.routers.whoami.entrypoints=web"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.middlewares.https-redirect.redirectScheme.scheme=https"
+      - "traefik.http.middlewares.https-redirect.redirectScheme.permanent=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.docker.localhost`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+
+  # whoami:
+  #   # A container that exposes an API to show its IP address
+  #   image: "containous/whoami"
+  #   # container_name: "whoami"
+  #   hostname: whoami
+  #   # ports:
+  #   #   - "80:80"
+  #   networks:
+  #     - "traefik"
+  #   labels:
+  #     # Explicitly tell Traefik to expose this container
+  #     - "traefik.enable=true"
+  #     # The domain the service will respond to
+  #     # - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`, `whoami.issenn.lan`)"
+  #     # Allow request only from the predefined entry point named "web"
+  #     - "traefik.http.routers.whoami.entrypoints=web"
+
+secrets:
+  CF_API_EMAIL:
+    file: ./secrets/CF_API_EMAIL
+  CF_DNS_API_TOKEN:
+    file: ./secrets/CF_DNS_API_TOKEN
+  CF_ZONE_API_TOKEN:
+    file: ./secrets/CF_ZONE_API_TOKEN
 
 # 先创建外部网卡
 # docker network create traefik
 networks:
+  # default:
+  #   # driver: bridge
+  #   external: true
   traefik:
-    # name: "traefik"
+    name: "traefik"
     # driver: "bridge"
     external: true

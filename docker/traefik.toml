@@ -36,13 +36,13 @@
         writeTimeout = 42
         idleTimeout = 42
 
-    [entryPoints.web.proxyProtocol]
-      # insecure = true
-      trustedIPs = ["127.0.0.1/32", "192.168.1.7"]
+    # [entryPoints.web.proxyProtocol]
+    #   # insecure = true
+    #   trustedIPs = ["127.0.0.1/32", "192.168.1.7"]
 
-    [entryPoints.web.forwardedHeaders]
-      # insecure = true
-      trustedIPs = ["127.0.0.1/32", "192.168.1.7"]
+    # [entryPoints.web.forwardedHeaders]
+    #   # insecure = true
+    #   trustedIPs = ["127.0.0.1/32", "192.168.1.7"]
 
   [entryPoints.websecure]
     address = ":443"
@@ -60,21 +60,23 @@
     address = ":8089"
 
 # Enable ACME (Let's Encrypt): automatic SSL.
-# [certificatesResolvers]
-#   [certificatesResolvers.sample]
-#     [certificatesResolvers.sample.acme]
+[certificatesResolvers]
+  [certificatesResolvers.letsEncrypt]
+    [certificatesResolvers.letsEncrypt.acme]
 
       # Email address used for registration.
       #
       # Required
       #
       # email = "your-email@your-domain.org"
+      email = "issennknight@gmail.com"
 
       # File or key used for certificates storage.
       #
       # Required
       #
       # storage = "acme.json"
+      storage = "/etc/traefik/acme/acme.json"
 
       # CA server to use.
       # Uncomment the line to use Let's Encrypt's staging server,
@@ -83,7 +85,7 @@
       # Optional
       # Default: "https://acme-v02.api.letsencrypt.org/directory"
       #
-      # caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+      caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
 
       # KeyType to use.
       #
@@ -118,13 +120,14 @@
       #
       # Optional
       #
-      # [certificatesResolvers.sample.acme.dnsChallenge]
+      [certificatesResolvers.letsEncrypt.acme.dnsChallenge]
 
         # DNS provider used.
         #
         # Required
         #
         # provider = "digitalocean"
+        provider = "cloudflare"
 
         # By default, the provider will verify the TXT DNS challenge record before letting ACME verify.
         # If delayBeforeCheck is greater than zero, this check is delayed for the configured duration in seconds.
@@ -134,6 +137,7 @@
         # Default: 0
         #
         # delayBeforeCheck = 0
+        delayBeforeCheck = 30
 
         # Use following DNS servers to resolve the FQDN authority.
         #
@@ -141,6 +145,7 @@
         # Default: empty
         #
         # resolvers = ["1.1.1.1:53", "8.8.8.8:53"]
+        resolvers = ["1.0.0.1:53", "8.8.8.8:53"]
 
         # Disable the DNS propagation checks before notifying ACME that the DNS challenge is ready.
         #
@@ -151,6 +156,16 @@
         # Default: false
         #
         # disablePropagationCheck = true
+
+  # [certificatesResolvers.cloudflare]
+  #   [certificatesResolvers.cloudflare.acme]
+  #     email = "issennknight@gmail.com"
+  #     storage = "/etc/traefik/acme/acme-cloudflare.json"
+  #     caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+  #     [certificatesResolvers.cloudflare.acme.dnsChallenge]
+  #       provider = "cloudflare"
+  #       delayBeforeCheck = 30
+  #       resolvers = ["1.0.0.1:53", "8.8.8.8:53"]
 
 # [hostResolver]
 #   cnameFlattening = true
@@ -174,7 +189,8 @@
   # Default: "ERROR"
   #
   # level = "DEBUG"
-  level = "WARN"
+  # level = "WARN"
+  # level = "INFO"
 
   # Sets the filepath for the traefik log. If not specified, stdout will be used.
   # Intermediate directories are created if necessary.
@@ -184,6 +200,7 @@
   #
   # filePath = "log/traefik.log"
   # filePath = "/usr/local/var/log/traefik/general.log"
+  filePath = "/var/log/traefik/general.log"
 
   # Format is either "json" or "common".
   #
@@ -191,7 +208,6 @@
   # Default: "common"
   #
   # format = "json"
-  format = "json"
 
 ################################################################
 # Access logs configuration
@@ -213,6 +229,8 @@
   #
   # filePath = "/path/to/log/log.txt"
   # filePath = "/usr/local/var/log/traefik/access.log"
+  filePath = "/var/log/traefik/access.log"
+
   bufferingSize = 100
 
   # Format is either "json" or "common".
@@ -221,7 +239,6 @@
   # Default: "common"
   #
   # format = "json"
-  format = "json"
 
   [accessLog.filters]
     statusCodes = ["200", "300-302"]
@@ -233,6 +250,7 @@
 
     [accessLog.fields.names]
       "ClientUsername" = "drop"
+      "StartUTC" = "drop"
 
     [accessLog.fields.headers]
       defaultMode = "keep"
@@ -271,7 +289,8 @@
   #
   # entryPoint = "traefik"
 
-  insecure = true
+  # insecure = true
+  insecure = false
 
   # Enabled Dashboard
   #
@@ -296,6 +315,8 @@
   # Default: "traefik"
   #
   # entryPoint = "traefik"
+
+  # manualRouting = true
 
 ## Static configuration
 
@@ -337,6 +358,7 @@
   # Default: "Host(`{{ normalize .Name }}`)"
   #
   # defaultRule = "Host(`{{ normalize .Name }}.docker.localhost`)"
+  defaultRule = "Host(`{{ index .Labels \"com.docker.compose.service\" }}.docker.localhost`)"
 
   # Expose containers by default in traefik
   #
@@ -361,4 +383,3 @@
     directory = "/etc/traefik/config"
     watch = true
     debugLogGeneratedTemplate = true
-
