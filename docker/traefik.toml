@@ -85,7 +85,7 @@
       # Optional
       # Default: "https://acme-v02.api.letsencrypt.org/directory"
       #
-      caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+      # caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
 
       # KeyType to use.
       #
@@ -157,15 +157,24 @@
         #
         # disablePropagationCheck = true
 
-  # [certificatesResolvers.cloudflare]
-  #   [certificatesResolvers.cloudflare.acme]
-  #     email = "issennknight@gmail.com"
-  #     storage = "/etc/traefik/acme/acme-cloudflare.json"
-  #     caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
-  #     [certificatesResolvers.cloudflare.acme.dnsChallenge]
-  #       provider = "cloudflare"
-  #       delayBeforeCheck = 30
-  #       resolvers = ["1.0.0.1:53", "8.8.8.8:53"]
+  [certificatesResolvers.cloudflare]
+    [certificatesResolvers.cloudflare.acme]
+      email = "issennknight@gmail.com"
+      storage = "/etc/traefik/acme/acme-cloudflare.json"
+      [certificatesResolvers.cloudflare.acme.dnsChallenge]
+        provider = "cloudflare"
+        delayBeforeCheck = 30
+        resolvers = ["1.0.0.1:53", "8.8.8.8:53"]
+
+  [certificatesResolvers.test]
+    [certificatesResolvers.test.acme]
+      email = "issennknight@gmail.com"
+      storage = "/etc/traefik/acme/acme-test.json"
+      caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+      [certificatesResolvers.test.acme.dnsChallenge]
+        provider = "cloudflare"
+        delayBeforeCheck = 10
+        resolvers = ["1.0.0.1:53", "8.8.8.8:53"]
 
 # [hostResolver]
 #   cnameFlattening = true
