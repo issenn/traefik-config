@@ -31,6 +31,14 @@ services:
       - "8082:8082"
     networks:
       - "traefik"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 4M
     volumes:
       # So that Traefik can listen to the Docker events
       # - "/var/run/docker.sock:/var/run/docker.sock:ro"
