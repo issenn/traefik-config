@@ -32,7 +32,7 @@
 
       [http.routers.traefik-dashboard-tls.tls]
         options = "default"
-        certResolver = "test"
+        certResolver = "manual"
         [[http.routers.traefik-dashboard-tls.tls.domains]]
           main = "traefik.issenn.cf"
           sans = ["traefik.issenn.cf"]

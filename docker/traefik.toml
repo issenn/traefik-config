@@ -174,7 +174,15 @@
       caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
       [certificatesResolvers.test.acme.dnsChallenge]
         provider = "cloudflare"
-        # provider = "manual"
+        delayBeforeCheck = 10
+        resolvers = ["1.0.0.1:53", "8.8.8.8:53"]
+
+  [certificatesResolvers.manual]
+    [certificatesResolvers.manual.acme]
+      email = "issennknight@gmail.com"
+      storage = "/etc/traefik/acme/acme-manual.json"
+      [certificatesResolvers.manual.acme.dnsChallenge]
+        provider = "manual"
         delayBeforeCheck = 10
         resolvers = ["1.0.0.1:53", "8.8.8.8:53"]
 
