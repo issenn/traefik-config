@@ -123,6 +123,30 @@ services:
   #     # Allow request only from the predefined entry point named "web"
   #     - "traefik.http.routers.whoami.entrypoints=web"
 
+  yookie:
+    # A container that exposes an API to show its IP address
+    image: "containous/whoami"
+    container_name: "yookie"
+    hostname: yookie
+    # ports:
+    #   - "80:80"
+    networks:
+      - "traefik"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # yookie
+      - "traefik.http.routers.yookie-https.rule=Host(`yookie.issenn.online`)"
+      - "traefik.http.routers.yookie-https.entrypoints=websecure"
+      - "traefik.http.routers.yookie-https.tls=true"
+      - "traefik.http.routers.yookie-https.tls.certresolver=letsEncrypt"
+      - "traefik.http.routers.yookie-https.service=yookie"
+      - "traefik.http.routers.yookie-http.rule=Host(`yookie.issenn.online`)"
+      - "traefik.http.routers.yookie-http.entrypoints=web"
+      - "traefik.http.routers.yookie-http.middlewares=https-redirect"
+      - "traefik.http.routers.yookie-http.service=yookie"
+      - "traefik.http.services.yookie.loadbalancer.server.port=80"
+
 secrets:
   CF_API_EMAIL:
     file: ./secrets/CF_API_EMAIL
