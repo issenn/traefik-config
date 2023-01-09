@@ -1,0 +1,8 @@
+# Prevent suggesting these words
+Ception
+middlewares
+redirections
+resolv
+stripprefix
+traefik
+websecure

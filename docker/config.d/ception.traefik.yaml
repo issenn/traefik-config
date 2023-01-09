@@ -1,0 +1,160 @@
+# Dynamic Configuration for Traefik-Ception
+
+http:
+  routers:
+    # traefik-redirect-https:
+    #   entryPoints:
+    #     - "web"
+    #   priority: 2147483646
+    #   # rule: "Host(`traefik.issenn.lan`, `traefik.issenn.local`) && (Path(`/`) || PathPrefix(`/api`) || PathPrefix(`/dashboard`) || PathPrefix(`/ping`) || PathPrefix(`/debug`))"
+    #   rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`)"
+    #   # If the rule matches, applies the middleware
+    #   middlewares:
+    #     - "redirect-https"
+    #   # If the rule matches, forward to the whoami service (declared below)
+    #   service: "redirect-https"
+
+    traefik-api:
+      entryPoints:
+        - "web"
+      rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/api`)"
+      service: "api@internal"
+      middlewares:
+        - "redirect-https"
+        - "auth-traefik"
+        - "compress-traefik"
+
+    traefik-api-tls:
+      entryPoints:
+        - "websecure"
+      rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/api`)"
+      service: "api@internal"
+      middlewares:
+        - "auth-traefik"
+        - "compress-traefik"
+      tls:
+        {}
+
+    traefik-debug:
+      entryPoints:
+        - "web"
+      rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/debug`)"
+      service: "api@internal"
+      middlewares:
+        - "redirect-https"
+        - "auth-traefik"
+        - "compress-traefik"
+
+    traefik-debug-tls:
+      entryPoints:
+        - "websecure"
+      rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/debug`)"
+      service: "api@internal"
+      middlewares:
+        - "auth-traefik"
+        - "compress-traefik"
+      tls:
+        {}
+
+    traefik-ping:
+      entryPoints:
+        - "web"
+      rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/ping`)"
+      service: "ping@internal"
+      middlewares:
+        - "auth-traefik"
+        - "compress-traefik"
+
+    traefik-ping-tls:
+      entryPoints:
+        - "websecure"
+      rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/ping`)"
+      service: "ping@internal"
+      middlewares:
+        - "auth-traefik"
+        - "compress-traefik"
+      tls:
+        {}
+
+    traefik-metrics:
+      entryPoints:
+        - "web"
+      rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/metrics`)"
+      service: "prometheus@internal"
+      middlewares:
+        - "auth-traefik"
+        - "compress-traefik"
+
+    traefik-metrics-tls:
+      entryPoints:
+        - "websecure"
+      rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/metrics`)"
+      service: "prometheus@internal"
+      middlewares:
+        - "auth-traefik"
+        - "compress-traefik"
+      tls:
+        {}
+
+    traefik-dashboard:
+      entryPoints:
+        - "web"
+      rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`)"
+      # rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/dashboard`)"
+      service: "api@internal"
+      # service: "dashboard@internal"
+      middlewares:
+        - "redirect-https"
+        - "redirect-dashboard"
+        # For `dashboard@internal`
+        # - "stripprefix-dashboard"
+        - "auth-traefik"
+        - "compress-traefik"
+
+    traefik-dashboard-tls:
+      entryPoints:
+        - "websecure"
+      rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`)"
+      # rule: "Host(`traefik.issenn.cf`, `traefik.issenn.lan`, `traefik.issenn.local`) && PathPrefix(`/dashboard`)"
+      service: "api@internal"
+      # service: "dashboard@internal"
+      middlewares:
+        - "redirect-dashboard"
+        # For `dashboard@internal`
+        # - "stripprefix-dashboard"
+        - "auth-traefik"
+        - "compress-traefik"
+      tls:
+        options: "default"
+        certResolver: "manual"
+        domains:
+          - main: "traefik.issenn.cf"
+            sans:
+              - "traefik.issenn.cf"
+
+  middlewares:
+    compress-traefik:
+      compress:
+        {}
+
+    # Define an authentication mechanism
+    auth-traefik:
+      basicAuth:
+        realm: traefik
+        removeHeader: false
+        users:
+          - "user:$apr1$Tg6ykNnt$oV4h.ST7wVNiqL6MgOiIw."
+          - "test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/"
+          - "test2:$apr1$d9hr9HBB$4HxwgUir3HP4EsggP/QNo0"
+
+    redirect-dashboard:
+      redirectRegex:
+        permanent: true
+        regex: "^(https?:\\/\\/[^:\\/]+(:\\d+)?)\\/$"
+        replacement: "${1}/dashboard/"
+
+    stripprefix-dashboard:
+      stripPrefix:
+        prefixes:
+          - "/dashboard/"
+          - "/dashboard"

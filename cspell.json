@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "language": "en",
+  "cache": {
+    "useCache": true,
+    "cacheLocation": "./.cspell/.cspellcache",
+    "cacheStrategy": "content"
+  },
+  "enableFiletypes": [
+    "helm"
+  ],
+  "ignorePaths": [
+    ".git",
+    ".gitignore",
+    "**/.gitignore",
+    ".gitattributes",
+    "**/.vscode/**",
+    "*.{png,jpg,pdf,svg}",
+    "package.json",
+    "*-lock.{json,yaml}",
+    "*.log",
+    "**/dist/**",
+    "**/tsconfig.json",
+    "**/node_modules/**",
+    "/cspell-dict.txt",
+    "/cspell-ignore-words.txt",
+    "/.cspell",
+    "**/{cspell.*,cSpell.*,.cspell.*,cspell.config.*}",
+    "cspell.json"
+  ],
+  "useGitignore": true,
+  "dictionaryDefinitions": [
+    {
+      "name": "custom-dictionary",
+      "path": "./.cspell/custom-dictionary.txt",
+      "addWords": true
+    },
+    {
+      "name": "workspace-dictionary",
+      "path": "./.cspell/custom-dictionary-workspace.txt",
+      "description": "Custom Workspace Dictionary",
+      "addWords": true,
+      "scope": "workspace"
+    },
+    {
+      "name": "ignore-words-dictionary",
+      "path": "./.cspell/cspell-ignore-words.txt",
+      "description": "Words to be Ignored",
+      "addWords": true,
+      "noSuggest": true
+    }
+  ],
+  "dictionaries": [
+    "custom-dictionary",
+    "workspace-dictionary",
+    "ignore-words-dictionary"
+  ],
+  "languageSettings": [
+    {
+      "languageId": "*",
+      "allowCompoundWords": false
+    }
+  ],
+  "flagWords": [],
+  "words": [],
+  "ignoreWords": [],
+  // "features": {
+  //   "weighted-suggestions": true
+  // },
+  "import": []
+}

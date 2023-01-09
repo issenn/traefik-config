@@ -28,13 +28,13 @@
 
     [entryPoints.web.transport]
       [entryPoints.web.transport.lifeCycle]
-        requestAcceptGraceTimeout = 42
-        graceTimeOut = 42
+        requestAcceptGraceTimeout = "42s"
+        graceTimeOut = "42s"
 
       [entryPoints.web.transport.respondingTimeouts]
-        readTimeout = 42
-        writeTimeout = 42
-        idleTimeout = 42
+        readTimeout = "42s"
+        writeTimeout = "42s"
+        idleTimeout = "42s"
 
     # [entryPoints.web.proxyProtocol]
     #   # insecure = true
@@ -138,7 +138,7 @@
         # Default: 0
         #
         # delayBeforeCheck = 0
-        delayBeforeCheck = 30
+        delayBeforeCheck = "30s"
 
         # Use following DNS servers to resolve the FQDN authority.
         #
@@ -164,7 +164,7 @@
       storage = "/etc/traefik/acme/acme-cloudflare.json"
       [certificatesResolvers.cloudflare.acme.dnsChallenge]
         provider = "cloudflare"
-        delayBeforeCheck = 30
+        delayBeforeCheck = "30s"
         resolvers = ["1.0.0.1:53", "8.8.8.8:53"]
 
   [certificatesResolvers.test]
@@ -174,7 +174,7 @@
       caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
       [certificatesResolvers.test.acme.dnsChallenge]
         provider = "cloudflare"
-        delayBeforeCheck = 10
+        delayBeforeCheck = "10s"
         resolvers = ["1.0.0.1:53", "8.8.8.8:53"]
 
   [certificatesResolvers.manual]
@@ -183,7 +183,7 @@
       storage = "/etc/traefik/acme/acme-manual.json"
       [certificatesResolvers.manual.acme.dnsChallenge]
         provider = "manual"
-        delayBeforeCheck = 10
+        delayBeforeCheck = "10s"
         resolvers = ["1.0.0.1:53", "8.8.8.8:53"]
 
 # [hostResolver]
@@ -345,16 +345,12 @@
   maxIdleConnsPerHost = 7
 
   [serversTransport.forwardingTimeouts]
-    # dialTimeout = "30s"
-    dialTimeout = 30
-    # responseHeaderTimeout = "1s"
-    responseHeaderTimeout = 5
-    # idleConnTimeout = "90s"
-    idleConnTimeout = 90
+    dialTimeout = "30s"
+    responseHeaderTimeout = "5s"
+    idleConnTimeout = "90s"
 
 [providers]
-  # providersThrottleDuration = "10s"
-  providersThrottleDuration = 10
+  providersThrottleDuration = "10s"
 
 ################################################################
 # Docker configuration backend

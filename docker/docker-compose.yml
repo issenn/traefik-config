@@ -1,8 +1,11 @@
-version: "3.7"
+version: "3.9"
+
+name: traefik
 
 services:
+  # reverse-proxy:
   traefik:
-    image: traefik:v2.2.0
+    image: traefik:v2.9.6
     container_name: "traefik"
     hostname: "traefik"
     restart: unless-stopped
@@ -38,7 +41,7 @@ services:
           memory: 50M
         reservations:
           cpus: '0.25'
-          memory: 4M
+          memory: 6M
     volumes:
       # So that Traefik can listen to the Docker events
       # - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -46,26 +49,18 @@ services:
         source: "/var/run/docker.sock"
         target: "/var/run/docker.sock"
         read_only: true
-        volume:
-          nocopy: true
       # - type: bind
       #   source: "/private/var/db/timezone/tz/2019c.1.0/zoneinfo"
       #   target: "/usr/share/zoneinfo"
       #   read_only: true
-      #   volume:
-      #     nocopy: true
       - type: bind
-        source: "./traefik.toml"
-        target: "/etc/traefik/traefik.toml"
+        source: "./traefik.yaml"
+        target: "/etc/traefik/traefik.yaml"
         read_only: true
-        volume:
-          nocopy: true
       - type: bind
-        source: "./config"
-        target: "/etc/traefik/config"
+        source: "./config.d"
+        target: "/etc/traefik/config.d"
         read_only: true
-        volume:
-          nocopy: true
       - type: bind
         source: "./acme"
         target: "/etc/traefik/acme"
@@ -73,8 +68,6 @@ services:
         source: "./tls"
         target: "/etc/traefik/tls"
         read_only: true
-        volume:
-          nocopy: true
       - type: bind
         source: "./logs"
         target: "/var/log/traefik"
@@ -96,15 +89,81 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
-      - "traefik.http.middlewares.https-redirect.redirectScheme.scheme=https"
-      - "traefik.http.middlewares.https-redirect.redirectScheme.permanent=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.docker.localhost`)"
-      - "traefik.http.routers.traefik.entrypoints=web"
-      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      # API
+      - "traefik.http.routers.traefik-api.rule=Host(`traefik.docker.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.traefik-api.entrypoints=web"
+      - "traefik.http.routers.traefik-api.service=api@internal"
+      - "traefik.http.routers.traefik-api.middlewares=redirect-https,compress-traefik"
+      - "traefik.http.routers.traefik-api-tls.rule=Host(`traefik.docker.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.traefik-api-tls.entrypoints=websecure"
+      - "traefik.http.routers.traefik-api-tls.service=api@internal"
+      - "traefik.http.routers.traefik-api-tls.middlewares=compress-traefik"
+      - "traefik.http.routers.traefik-api-tls.tls=true"
+      # DEBUG
+      - "traefik.http.routers.traefik-debug.rule=Host(`traefik.docker.localhost`) && PathPrefix(`/debug`)"
+      - "traefik.http.routers.traefik-debug.entrypoints=web"
+      - "traefik.http.routers.traefik-debug.service=api@internal"
+      - "traefik.http.routers.traefik-debug.middlewares=redirect-https,compress-traefik"
+      - "traefik.http.routers.traefik-debug-tls.rule=Host(`traefik.docker.localhost`) && PathPrefix(`/debug`)"
+      - "traefik.http.routers.traefik-debug-tls.entrypoints=websecure"
+      - "traefik.http.routers.traefik-debug-tls.service=api@internal"
+      - "traefik.http.routers.traefik-debug-tls.middlewares=compress-traefik"
+      - "traefik.http.routers.traefik-debug-tls.tls=true"
+      # Ping
+      - "traefik.http.routers.traefik-ping.rule=Host(`traefik.docker.localhost`) && PathPrefix(`/ping`)"
+      - "traefik.http.routers.traefik-ping.entrypoints=web"
+      - "traefik.http.routers.traefik-ping.service=ping@internal"
+      - "traefik.http.routers.traefik-ping.middlewares=redirect-https,compress-traefik"
+      - "traefik.http.routers.traefik-ping-tls.rule=Host(`traefik.docker.localhost`) && PathPrefix(`/ping`)"
+      - "traefik.http.routers.traefik-ping-tls.entrypoints=websecure"
+      - "traefik.http.routers.traefik-ping-tls.service=ping@internal"
+      - "traefik.http.routers.traefik-ping-tls.middlewares=compress-traefik"
+      - "traefik.http.routers.traefik-ping-tls.tls=true"
+      # Metrics
+      - "traefik.http.routers.traefik-metrics.rule=Host(`traefik.docker.localhost`) && PathPrefix(`/metrics`)"
+      - "traefik.http.routers.traefik-metrics.entrypoints=web"
+      - "traefik.http.routers.traefik-metrics.service=prometheus@internal"
+      - "traefik.http.routers.traefik-metrics.middlewares=redirect-https,compress-traefik"
+      - "traefik.http.routers.traefik-metrics-tls.rule=Host(`traefik.docker.localhost`) && PathPrefix(`/metrics`)"
+      - "traefik.http.routers.traefik-metrics-tls.entrypoints=websecure"
+      - "traefik.http.routers.traefik-metrics-tls.service=prometheus@internal"
+      - "traefik.http.routers.traefik-metrics-tls.middlewares=compress-traefik"
+      - "traefik.http.routers.traefik-metrics-tls.tls=true"
+      # Dashboard
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.docker.localhost`)"
+      # - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.docker.localhost`) && PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=web"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      # - "traefik.http.routers.traefik-dashboard.service=dashboard@internal"
+      - "traefik.http.routers.traefik-dashboard.middlewares=redirect-https,redirect-dashboard,compress-traefik"
+      # - "traefik.http.routers.traefik-dashboard.middlewares=redirect-https,redirect-dashboard@file,stripprefix-dashboard@file,compress-traefik"
+      - "traefik.http.routers.traefik-dashboard-tls.rule=Host(`traefik.docker.localhost`)"
+      # - "traefik.http.routers.traefik-dashboard-tls.rule=Host(`traefik.docker.localhost`) && PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.traefik-dashboard-tls.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard-tls.service=api@internal"
+      # - "traefik.http.routers.traefik-dashboard-tls.service=dashboard@internal"
+      - "traefik.http.routers.traefik-dashboard-tls.middlewares=redirect-dashboard,compress-traefik"
+      # - "traefik.http.routers.traefik-dashboard-tls.middlewares=redirect-https,redirect-dashboard@file,stripprefix-dashboard@file,compress-traefik"
+      - "traefik.http.routers.traefik-dashboard-tls.tls=true"
+      # - "traefik.http.routers.traefik-dashboard-tls.certresolver=manual"
+      # global redirect to https
+      # - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
+      # - "traefik.http.routers.http-catchall.entrypoints=web"
+      # - "traefik.http.routers.http-catchall.middlewares=redirect-https"
+      # Middlewares
+      - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-https.redirectscheme.port=443"
+      - "traefik.http.middlewares.compress-content.compress=true"
+      - "traefik.http.middlewares.redirect-dashboard.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.redirect-dashboard.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-dashboard.redirectscheme.port=443"
+      - "traefik.http.middlewares.stripprefix-dashboard.stripPrefix.prefixes=/dashboard/,/dashboard"
+      - "traefik.http.middlewares.compress-traefik.compress=true"
     # stdin_open: true  # docker run -i
     # tty: true  # docker run -t
 
-# docker-compose run -T --service-ports traefik
+# docker-compose run --rm -T --service-ports traefik
 
   # whoami:
   #   # A container that exposes an API to show its IP address
@@ -123,29 +182,29 @@ services:
   #     # Allow request only from the predefined entry point named "web"
   #     - "traefik.http.routers.whoami.entrypoints=web"
 
-  yookie:
-    # A container that exposes an API to show its IP address
-    image: "containous/whoami"
-    container_name: "yookie"
-    hostname: yookie
-    # ports:
-    #   - "80:80"
-    networks:
-      - "traefik"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik"
-      # yookie
-      - "traefik.http.routers.yookie-https.rule=Host(`yookie.issenn.online`)"
-      - "traefik.http.routers.yookie-https.entrypoints=websecure"
-      - "traefik.http.routers.yookie-https.tls=true"
-      - "traefik.http.routers.yookie-https.tls.certresolver=letsEncrypt"
-      - "traefik.http.routers.yookie-https.service=yookie"
-      - "traefik.http.routers.yookie-http.rule=Host(`yookie.issenn.online`)"
-      - "traefik.http.routers.yookie-http.entrypoints=web"
-      - "traefik.http.routers.yookie-http.middlewares=https-redirect"
-      - "traefik.http.routers.yookie-http.service=yookie"
-      - "traefik.http.services.yookie.loadbalancer.server.port=80"
+  # yookie:
+  #   # A container that exposes an API to show its IP address
+  #   image: "containous/whoami"
+  #   container_name: "yookie"
+  #   hostname: yookie
+  #   # ports:
+  #   #   - "80:80"
+  #   networks:
+  #     - "traefik"
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.docker.network=traefik"
+  #     # yookie
+  #     - "traefik.http.routers.yookie-https.rule=Host(`yookie.issenn.online`)"
+  #     - "traefik.http.routers.yookie-https.entrypoints=websecure"
+  #     - "traefik.http.routers.yookie-https.tls=true"
+  #     - "traefik.http.routers.yookie-https.tls.certresolver=letsEncrypt"
+  #     - "traefik.http.routers.yookie-https.service=yookie"
+  #     - "traefik.http.routers.yookie-http.rule=Host(`yookie.issenn.online`)"
+  #     - "traefik.http.routers.yookie-http.entrypoints=web"
+  #     - "traefik.http.routers.yookie-http.middlewares=https-redirect"
+  #     - "traefik.http.routers.yookie-http.service=yookie"
+  #     - "traefik.http.services.yookie.loadbalancer.server.port=80"
 
 secrets:
   CF_API_EMAIL:

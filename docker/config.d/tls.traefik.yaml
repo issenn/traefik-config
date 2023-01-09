@@ -1,0 +1,113 @@
+# Dynamic Configuration
+
+tls:
+  # certificates:
+  #   - certFile: "/path/to/domain.cert"
+  #     keyFile: "/path/to/domain.key"
+  #     stores:
+  #       - "default"
+
+  #   -
+  #     # Note that since no store is defined,
+  #     # the certificate below will be stored in the `default` store.
+  #     certFile: "/path/to/other-domain.cert"
+  #     keyFile: "/path/to/other-domain.key"
+
+  #   - certFile: "/Users/issenn/Downloads/archive/cert.pem"
+  #     keyFile: "/Users/issenn/Downloads/archive/privkey.pem"
+  #     stores:
+  #       - "default"
+
+  stores:
+    default:
+      {}
+      # defaultCertificate:
+      #   certFile: "path/to/cert.crt"
+      #   keyFile: "path/to/cert.key"
+      # defaultGeneratedCert:
+      #   resolver: myresolver
+      #   domain:
+      #     main: example.org
+      #     sans:
+      #       - "foo.example.org"
+      #       - "bar.example.org"
+
+  options:
+    default:
+      minVersion: "VersionTLS12"
+      # maxVersion: "VersionTLS13"
+      # sniStrict: true
+      cipherSuites:
+        # Secure
+        # TLS 1.2 cipher suites.
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"
+        # Recommended
+        # TLS 1.2 cipher suites.
+        - "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
+        # TLS 1.3 cipher suites.
+        - "TLS_AES_128_GCM_SHA256"
+        - "TLS_AES_256_GCM_SHA384"
+        - "TLS_CHACHA20_POLY1305_SHA256"
+      # curvePreferences:
+      #   - "X25519"
+      #   - "CurveP521"
+      #   - "CurveP384"
+      #   - "CurveP256"
+      # clientAuth:
+      #   # in PEM format. each file can contain multiple CAs.
+      #   caFiles:
+      #     - "path/to/clientca1.crt"
+      #     - "path/to/clientca2.crt"
+      #   # clientAuthType: "RequireAndVerifyClientCert"
+      #   clientAuthType: "NoClientCert"
+
+    maxTLS12:
+      minVersion: "VersionTLS10"
+      maxVersion: "VersionTLS12"
+      cipherSuites:
+        # TLS 1.0 - 1.2 cipher suites.
+        # Insecure
+        # - "TLS_RSA_WITH_RC4_128_SHA"
+        # - "TLS_RSA_WITH_3DES_EDE_CBC_SHA"
+        # - "TLS_RSA_WITH_AES_128_CBC_SHA"
+        # - "TLS_RSA_WITH_AES_256_CBC_SHA"
+        # - "TLS_RSA_WITH_AES_128_CBC_SHA256"
+        # - "TLS_RSA_WITH_AES_128_GCM_SHA256"
+        # - "TLS_RSA_WITH_AES_256_GCM_SHA384"
+        # - "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA"
+        # - "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA"
+        # - "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
+        # - "TLS_ECDHE_RSA_WITH_RC4_128_SHA"
+        # - "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA"
+        # - "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA"
+        # - "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA"
+        # - "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256"
+        # - "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
+        # Secure
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"
+        # Recommended
+        - "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
+
+    minTLS13:
+      minVersion: "VersionTLS13"
+      # Cipher suites defined for TLS 1.2 and below cannot be used in TLS 1.3, and vice versa.
+      # (https://tools.ietf.org/html/rfc8446)
+      # With TLS 1.3, the cipher suites are not configurable (all supported cipher suites are safe in this case).
+      # https://golang.org/doc/go1.12#tls_1_3
+      cipherSuites:
+        # TLS 1.3 cipher suites.
+        # Secure
+        - "TLS_AES_128_CCM_8_SHA256"
+        - "TLS_AES_128_CCM_SHA256"
+        # Recommended
+        - "TLS_AES_128_GCM_SHA256"
+        - "TLS_AES_256_GCM_SHA384"
+        - "TLS_CHACHA20_POLY1305_SHA256"

@@ -1,0 +1,479 @@
+################################################################
+#
+# Configuration sample for Traefik v2.
+#
+# For Traefik v1: https://github.com/traefik/traefik/blob/v1.7/traefik.sample.toml
+#
+################################################################
+
+################################################################
+# Global configuration
+################################################################
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+################################################################
+# EntryPoints configuration
+################################################################
+
+# EntryPoints definition
+#
+# Optional
+#
+entryPoints:
+  web:
+    # Listen on port 80 for incoming requests
+    address: ":80"
+    transport:
+      lifeCycle:
+        requestAcceptGraceTimeout: "0s"
+        graceTimeOut: "10s"
+      respondingTimeouts:
+        readTimeout: "0s"
+        writeTimeout: "0s"
+        idleTimeout: "180s"
+    # proxyProtocol:
+    #   insecure: true
+    #   trustedIPs:
+    #     - "127.0.0.1/32"
+    #     - "192.168.1.7"
+    # forwardedHeaders:
+    #   insecure: true
+    #   trustedIPs:
+    #     - "127.0.0.1/32"
+    #     - "192.168.1.7"
+    # http:
+    #   redirections:
+    #     entryPoint:
+    #       to: websecure
+    #       scheme: https
+    #       permanent: true
+    #       # priority: 1
+      # middlewares:
+      #   - "auth@file"
+      #   - "strip@file"
+    # http2:
+    #   maxConcurrentStreams: 250
+
+  websecure:
+    address: ":443"
+    # http:
+    #   tls:
+    #     options: ""
+    #     certResolver: leresolver
+    #     domains:
+    #       - main: example.com
+    #         sans:
+    #           - foo.example.com
+    #           - bar.example.com
+    #       - main: test.com
+    #         sans:
+    #           - foo.test.com
+    #           - bar.test.com
+
+  # If the entryPoint named traefik is not configured,
+  # it will be automatically created on port 8080.
+  # traefik:
+  #   address: ":8080"
+
+  # ping:
+  #   address: ":8082"
+
+  metrics:
+    address: ":8082"
+
+  # mysql:
+  #   address: ":3306/tcp"
+
+  # udpPort:
+  #   address: ":53/udp"
+  #   udp:
+  #     timeout: 3s
+
+  other:
+    address: ":8089"
+
+################################################################
+# CertificatesResolvers configuration
+################################################################
+certificatesResolvers:
+  letsEncrypt:
+    # Enable ACME (Let's Encrypt): automatic SSL.
+    acme:
+
+      # Email address used for registration.
+      #
+      # Required
+      #
+      # email: "test@example.com"
+      email: "issennknight@gmail.com"
+
+      # File or key used for certificates storage.
+      #
+      # Required
+      #
+      # storage: "acme.json"
+      storage: "/etc/traefik/acme/acme.json"
+
+      # CA server to use.
+      # Uncomment the line to use Let's Encrypt's staging server,
+      # leave commented to go to prod.
+      #
+      # Optional
+      # Default: "https://acme-v02.api.letsencrypt.org/directory"
+      #
+      # caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+
+      # The certificates' duration in hours.
+      # It defaults to 2160 (90 days) to follow Let's Encrypt certificates' duration.
+      #
+      # Optional
+      # Default: 2160
+      #
+      # certificatesDuration: 2160
+
+      # Preferred chain to use.
+      #
+      # If the CA offers multiple certificate chains, prefer the chain with an issuer matching this Subject Common Name.
+      # If no match, the default offered chain will be used.
+      #
+      # Optional
+      # Default: ""
+      #
+      # preferredChain: 'ISRG Root X1'
+
+      # KeyType to use.
+      #
+      # Optional
+      # Default: "RSA4096"
+      #
+      # Available values : "EC256", "EC384", "RSA2048", "RSA4096", "RSA8192"
+      #
+      # keyType: RSA4096
+
+      # Use a TLS-ALPN-01 ACME challenge.
+      #
+      # Optional (but recommended)
+      #
+      # tlsChallenge: {}
+
+      # Use a HTTP-01 ACME challenge.
+      #
+      # Optional
+      #
+      # httpChallenge:
+
+        # EntryPoint to use for the HTTP-01 challenges.
+        #
+        # Required
+        #
+        # entryPoint: web
+
+      # Use a DNS-01 ACME challenge rather than HTTP-01 challenge.
+      # Note: mandatory for wildcard certificate generation.
+      #
+      # Optional
+      #
+      dnsChallenge:
+
+        # DNS provider used.
+        #
+        # Required
+        #
+        # provider: digitalocean
+        provider: cloudflare
+        # provider: manual
+
+        # By default, the provider will verify the TXT DNS challenge record before letting ACME verify.
+        # If delayBeforeCheck is greater than zero, this check is delayed for the configured duration in seconds.
+        # Useful if internal networks block external DNS queries.
+        #
+        # Optional
+        # Default: 0
+        #
+        # delayBeforeCheck: 0
+        delayBeforeCheck: "30s"
+
+        # Use following DNS servers to resolve the FQDN authority.
+        #
+        # Optional
+        # Default: empty
+        #
+        # resolvers:
+        # - "1.1.1.1:53"
+        # - "8.8.8.8:53"
+        resolvers:
+          - "1.0.0.1:53"
+          - "8.8.8.8:53"
+
+        # Disable the DNS propagation checks before notifying ACME that the DNS challenge is ready.
+        #
+        # NOT RECOMMENDED:
+        # Increase the risk of reaching Let's Encrypt's rate limits.
+        #
+        # Optional
+        # Default: false
+        #
+        # disablePropagationCheck: true
+
+  cloudflare:
+    acme:
+      email: "issennknight@gmail.com"
+      storage: "/etc/traefik/acme/acme-cloudflare.json"
+      dnsChallenge:
+        provider: cloudflare
+        delayBeforeCheck: "30s"
+        resolvers:
+          - "1.0.0.1:53"
+          - "8.8.8.8:53"
+
+  test:
+    acme:
+      email: "issennknight@gmail.com"
+      storage: "/etc/traefik/acme/acme-test.json"
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      dnsChallenge:
+        provider: cloudflare
+        delayBeforeCheck: "10s"
+        resolvers:
+          - "1.0.0.1:53"
+          - "8.8.8.8:53"
+
+  manual:
+    acme:
+      email: "issennknight@gmail.com"
+      storage: "/etc/traefik/acme/acme-manual.json"
+      dnsChallenge:
+        provider: manual
+        delayBeforeCheck: "10s"
+        resolvers:
+          - "1.0.0.1:53"
+          - "8.8.8.8:53"
+
+# hostResolver:
+#   cnameFlattening: true
+#   resolvConfig: ""
+#   resolvDepth: 5
+
+################################################################
+# Traefik logs configuration
+################################################################
+
+# Traefik logs
+# Enabled by default and log to stdout
+#
+# Optional
+#
+log:
+
+  # Log level
+  #
+  # Optional
+  # Default: "ERROR"
+  #
+  # level: DEBUG
+  # level: WARN
+  # level: INFO
+
+  # Sets the filepath for the traefik log. If not specified, stdout will be used.
+  # Intermediate directories are created if necessary.
+  #
+  # Optional
+  # Default: os.Stdout
+  #
+  # filePath: log/traefik.log
+  # filePath: "/usr/local/var/log/traefik/general.log"
+  filePath: "/var/log/traefik/general.log"
+
+  # Format is either "json" or "common".
+  #
+  # Optional
+  # Default: "common"
+  #
+  # format: json
+
+################################################################
+# Access logs configuration
+################################################################
+
+# Enable access logs
+# By default it will write to stdout and produce logs in the textual
+# Common Log Format (CLF), extended with additional fields.
+#
+# Optional
+#
+accessLog:
+
+  # Sets the file path for the access log. If not specified, stdout will be used.
+  # Intermediate directories are created if necessary.
+  #
+  # Optional
+  # Default: os.Stdout
+  #
+  # filePath: /path/to/log/log.txt
+  # filePath: "/usr/local/var/log/traefik/access.log"
+  filePath: "/var/log/traefik/access.log"
+
+  # Format is either "json" or "common".
+  #
+  # Optional
+  # Default: "common"
+  #
+  # format: json
+
+  # Configuring a buffer of 100 lines
+  # bufferingSize: 100
+
+  filters:
+    statusCodes:
+      - "200"
+      - "300-302"
+    retryAttempts: true
+    minDuration: "10ms"
+
+  fields:
+    defaultMode: "keep"
+    names:
+      ClientUsername: "drop"
+      StartUTC: "drop"
+    headers:
+      defaultMode: "keep"
+      names:
+        User-Agent: "redact"
+        Authorization: "drop"
+        Content-Type: "keep"
+
+metrics:
+  prometheus:
+    buckets:
+      - 0.1
+      - 0.3
+      - 1.2
+      - 5.0
+    # addEntryPointsLabels: true
+    # addRoutersLabels: false
+    # addServicesLabels: true
+    entryPoint: "metrics"
+    manualRouting: true
+
+# tracing:
+#   serviceName: "tracing"
+#   jaeger:
+#     samplingParam: 1.0
+#     samplingServerURL: "http://127.0.0.1:5778/sampling"
+#     samplingType: "const"
+#     localAgentHostPort: "127.0.0.1:6831"
+
+################################################################
+# API and dashboard configuration
+################################################################
+
+# Enable API and dashboard
+#
+# Optional
+#
+api:
+
+  # Enable the API in insecure mode
+  #
+  # Optional
+  # Default: false
+  #
+  # insecure: true
+  # Enable the API in insecure mode, which means that
+  # the API will be available directly on the entryPoint named traefik.
+  insecure: false
+
+  # Enabled Dashboard
+  #
+  # Optional
+  # Default: true
+  #
+  # dashboard: false
+  dashboard: true
+
+  debug: true
+
+################################################################
+# Ping configuration
+################################################################
+
+# Enable ping
+ping:
+  {}
+
+  # Name of the related entry point
+  #
+  # Optional
+  # Default: "traefik"
+  #
+  # entryPoint: traefik
+  # entryPoint: ping
+
+  # Optional
+  # Default: false
+  # manualRouting: true
+
+  # Optional
+  # Default: 503
+  # terminatingStatusCode: 204
+
+# serversTransport:
+#   insecureSkipVerify: true
+#   # rootCAs:
+#   #   - "foo.crt"
+#   #   - "bar.crt"
+#   maxIdleConnsPerHost: 7
+#   forwardingTimeouts:
+#     dialTimeout: "30s"
+#     responseHeaderTimeout: "5s"
+#     idleConnTimeout: "90s"
+
+################################################################
+# Docker configuration backend
+################################################################
+
+providers:
+  # Optional
+  # Default: 2s
+  providersThrottleDuration: "10s"
+
+  # Enable Docker configuration backend
+  docker:
+
+    # Docker server endpoint. Can be a tcp or a unix socket endpoint.
+    #
+    # Required
+    # Default: "unix:///var/run/docker.sock"
+    #
+    # endpoint: tcp://10.10.10.10:2375
+    endpoint: "unix:///var/run/docker.sock"
+
+    # Default host rule.
+    #
+    # Optional
+    # Default: "Host(`{{ normalize .Name }}`)"
+    #
+    # defaultRule: Host(`{{ normalize .Name }}.docker.localhost`)
+    defaultRule: "Host(`{{ index .Labels \"com.docker.compose.service\" }}.docker.localhost`)"
+
+    # Expose containers by default in traefik
+    #
+    # Optional
+    # Default: true
+    #
+    # exposedByDefault: false
+    exposedByDefault: false
+
+    watch: true
+    swarmMode: false
+    useBindPortIP: false
+    network: "traefik"
+
+  # Enable the file provider to define routers / middlewares / services in a file
+  file:
+    # filename: "dynamic_conf.toml"
+    directory: "/etc/traefik/config.d"
+    watch: true
+    debugLogGeneratedTemplate: true

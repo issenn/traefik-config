@@ -1,0 +1,8 @@
+{
+  "yaml.schemas": {
+    "https://json.schemastore.org/traefik-v2-file-provider.json": [
+      "config.d/*.traefik.yaml",
+      "config.d/*.traefik.yml"
+    ]
+  }
+}

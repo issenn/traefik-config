@@ -1,0 +1,39 @@
+# Dynamic Configuration
+
+# tricks
+# https://github.com/containous/traefik/issues/4863#issuecomment-491093096
+
+http:
+  # routers:
+  #   http-catchall:
+  #     entryPoints:
+  #       - "web"
+  #     priority: 2147483646
+  #     # rule: "HostRegexp(`{any:.+}`)"
+  #     rule: "HostRegexp(`{any:.*}`)"
+  #     middlewares:
+  #       - "redirect-https"
+  #     service: "redirect-https"
+
+  middlewares:
+    redirect-https:
+      redirectScheme:
+        permanent: true
+        scheme: "https"
+        port: "443"
+
+    compress-content:
+      compress:
+        {}
+        # excludedContentTypes:
+        #   - "text/event-stream"
+        # minResponseBodyBytes: 1024
+
+  services:
+    # Define how to reach an existing service on our infrastructure
+    redirect-https:
+      loadBalancer:
+        servers:
+          - url: ""
+          # - url: "localhost"
+        passHostHeader: true
