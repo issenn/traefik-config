@@ -58,7 +58,7 @@ services:
         target: "/etc/traefik/traefik.yaml"
         read_only: true
       - type: bind
-        source: "./config.d"
+        source: "./config.d/yaml"
         target: "/etc/traefik/config.d"
         read_only: true
       - type: bind
